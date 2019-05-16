@@ -37,10 +37,10 @@ describe('testRunTestcase', function() {
       calls: 0,
       retryAssertionTimeout: 0,
       reporter(results, cb) {
-        assert.equal(globals.calls, 6);
-        assert.equal(results.passed, 2);
-        assert.equal(results.failed, 2);
-        assert.equal(results.errors, 0);
+        assert.strictEqual(globals.calls, 6);
+        assert.strictEqual(results.passed, 2);
+        assert.strictEqual(results.failed, 2);
+        assert.strictEqual(results.errors, 0);
 
         cb();
       }
@@ -56,7 +56,8 @@ describe('testRunTestcase', function() {
       persist_globals: true,
       globals: globals,
       output_folder: false,
-      output: false
+      output: false,
+      silent: false
     };
 
     return NightwatchClient.runTests(testsPath, settings);
@@ -67,10 +68,10 @@ describe('testRunTestcase', function() {
     let globals = {
       calls: 0,
       reporter(results, cb) {
-        assert.equal(globals.calls, 4);
-        assert.equal(results.passed, 1);
-        assert.equal(results.failed, 1);
-        assert.equal(results.errors, 0);
+        assert.strictEqual(globals.calls, 4);
+        assert.strictEqual(results.passed, 1);
+        assert.strictEqual(results.failed, 1);
+        assert.strictEqual(results.errors, 0);
 
         cb();
       },
@@ -85,8 +86,8 @@ describe('testRunTestcase', function() {
       },
       persist_globals: true,
       globals: globals,
-      output: true,
-      silent: false,
+      output: false,
+      silent: true,
       output_folder: false
     };
 
@@ -101,11 +102,11 @@ describe('testRunTestcase', function() {
         version2: true,
         start_process: true
       },
-      silent: false,
+      silent: true,
       output: false,
       globals: {
         reporter(results, cb) {
-          assert.equal(Object.keys(results.modules).length, 1);
+          assert.strictEqual(Object.keys(results.modules).length, 1);
           assert.ok('demoTestSyncOne' in results.modules.syncBeforeAndAfter.completed);
 
           cb();
@@ -128,7 +129,7 @@ describe('testRunTestcase', function() {
         version2: true,
         start_process: true
       },
-      silent: false,
+      silent: true,
       output: false,
       globals: {
         reporter(results, cb) {
@@ -148,7 +149,7 @@ describe('testRunTestcase', function() {
         assert.ok(false, 'Test runner should have failed with invalid testcase error message');
       })
       .catch(err => {
-        assert.equal(err, 'Error: "Unknown" is not a valid testcase in the current test suite.');
+        assert.strictEqual(err.message, '"Unknown" is not a valid testcase in the current test suite.');
       });
   });
 
@@ -160,16 +161,18 @@ describe('testRunTestcase', function() {
         version2: true,
         start_process: true
       },
+      silent: true,
+      output: false,
       globals: {
         beforeEach(client, cb) {
-          assert.equal(client.currentTest.name, '');
-          assert.equal(client.currentTest.group, '');
-          assert.equal(client.currentTest.module, 'sampleSingleTest');
+          assert.strictEqual(client.currentTest.name, '');
+          assert.strictEqual(client.currentTest.group, '');
+          assert.strictEqual(client.currentTest.module, 'sampleSingleTest');
           cb();
         },
         afterEach(client, cb) {
-          assert.equal(client.currentTest.name, 'demoTest');
-          assert.equal(client.currentTest.module, 'sampleSingleTest');
+          assert.strictEqual(client.currentTest.name, 'demoTest');
+          assert.strictEqual(client.currentTest.module, 'sampleSingleTest');
           cb();
         },
         reporter(results, cb) {
@@ -193,6 +196,8 @@ describe('testRunTestcase', function() {
         version2: true,
         start_process: true
       },
+      silent: true,
+      output: false,
       globals: {
         reporter(results, cb) {
           if (results.lastError instanceof Error) {
@@ -212,11 +217,11 @@ describe('testRunTestcase', function() {
     let globals = {
       calls: 0,
       reporter(results, cb) {
-        assert.equal(settings.globals.calls, 6);
-        assert.equal(results.passed, 1);
-        assert.equal(results.failed, 1);
-        assert.equal(results.errors, 0);
-        assert.equal(results.skipped, 0);
+        assert.strictEqual(settings.globals.calls, 6);
+        assert.strictEqual(results.passed, 1);
+        assert.strictEqual(results.failed, 1);
+        assert.strictEqual(results.errors, 0);
+        assert.strictEqual(results.skipped, 0);
         cb();
       },
       retryAssertionTimeout: 0
@@ -228,7 +233,7 @@ describe('testRunTestcase', function() {
         version2: true,
         start_process: true
       },
-      silent: false,
+      silent: true,
       globals: globals,
       output: false,
       persist_globals: true,
@@ -242,14 +247,16 @@ describe('testRunTestcase', function() {
   });
 
   it('testRunner with retries and skip_testcases_on_fail=false', function() {
+    this.timeout(100000);
+
     let testsPath = path.join(__dirname, '../../sampletests/withfailures');
     let globals = {
       calls: 0,
       reporter(results, cb) {
-        assert.equal(settings.globals.calls, 10);
-        assert.equal(results.passed, 2);
-        assert.equal(results.failed, 2);
-        assert.equal(results.errors, 0);
+        assert.strictEqual(settings.globals.calls, 10);
+        assert.strictEqual(results.passed, 2);
+        assert.strictEqual(results.failed, 2);
+        assert.strictEqual(results.errors, 0);
         cb();
       },
       retryAssertionTimeout: 0
@@ -265,7 +272,8 @@ describe('testRunTestcase', function() {
       skip_testcases_on_fail: false,
       persist_globals: true,
       output_folder: false,
-      output: false
+      output: false,
+      silent: true
     };
 
     return NightwatchClient.runTests({

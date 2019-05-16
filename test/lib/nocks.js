@@ -1,9 +1,12 @@
 const nock = require('nock');
+const ElementNocks = require('./nockselements.js');
 
 module.exports = {
   disabled: false,
   disable() {
     this.disabled = true;
+    ElementNocks.disabled = true;
+    nock.cleanAll();
     nock.restore();
 
     return this;
@@ -50,6 +53,18 @@ module.exports = {
       .reply(200, {
         status: 0,
         state: 'success'
+      });
+
+    return this;
+  },
+
+  getUrl() {
+    nock('http://localhost:10195')
+      .get('/wd/hub/session/1352110219202/url')
+      .reply(200, {
+        status: 0,
+        state: 'success',
+        value: 'http://localhost'
       });
 
     return this;
@@ -268,6 +283,147 @@ module.exports = {
 
     return this;
   },
+
+  title(value) {
+    nock('http://localhost:10195')
+      .get('/wd/hub/session/1352110219202/title')
+      .reply(200, {
+        status: 0,
+        state: 'success',
+        value: value
+      });
+
+    return this;
+  },
+
+  active() {
+    nock('http://localhost:10195')
+      .post('/wd/hub/session/1352110219202/element/active')
+      .reply(200, {
+        status: 0,
+        state: 'success',
+        value: {ELEMENT: '0'}
+      });
+
+    return this;
+  },
+
+  notActive() {
+    nock('http://localhost:10195')
+      .post('/wd/hub/session/1352110219202/element/active')
+      .reply(200, {
+        status: 0,
+        state: 'success',
+        value: {ELEMENT: 'other'}
+      });
+
+    return this;
+  },
+
+  height(value) {
+    nock('http://localhost:10195')
+      .get('/wd/hub/session/1352110219202/element/0/size')
+      .reply(200, {
+        status: 0,
+        sessionId: '1352110219202',
+        value: {
+          height: value
+        },
+      });
+
+    return this;
+  },
+
+  width(value) {
+    nock('http://localhost:10195')
+      .get('/wd/hub/session/1352110219202/element/0/size')
+      .reply(200, {
+        status: 0,
+        sessionId: '1352110219202',
+        value: {
+          width: value
+        },
+      });
+
+    return this;
+  },
+
+  xPosition(value) {
+    nock('http://localhost:10195')
+      .get('/wd/hub/session/1352110219202/element/0/location_in_view')
+      .reply(200, {
+        status: 0,
+        sessionId: '1352110219202',
+        value: {
+          x: value
+        },
+      });
+
+    return this;
+  },
+
+  yPosition(value) {
+    nock('http://localhost:10195')
+      .get('/wd/hub/session/1352110219202/element/0/location_in_view')
+      .reply(200, {
+        status: 0,
+        sessionId: '1352110219202',
+        value: {
+          y: value
+        },
+      });
+
+    return this;
+  },
+
+  elementsFound(selector) {
+    nock('http://localhost:10195')
+      .post('/wd/hub/session/1352110219202/elements', {'using': 'css selector', 'value': selector})
+      .reply(200, {
+        status: 0,
+        state: 'success',
+        value: [
+          {ELEMENT: '0'},
+          {ELEMENT: '1'},
+          {ELEMENT: '2'},
+          {ELEMENT: '3'}
+        ]
+      });
+
+    return this;
+  },
+
+  elementsNotFound(selector) {
+    nock('http://localhost:10195')
+      .post('/wd/hub/session/1352110219202/elements', {'using': 'css selector', 'value': selector})
+      .reply(200, {
+        status: 0,
+        state: 'success',
+        value: []
+      });
+
+    return this;
+  },
+
+  cookie(name, value) {
+    nock('http://localhost:10195')
+      .get('/wd/hub/session/1352110219202/cookie')
+      .reply(200, {
+        status: 0,
+        state: 'success',
+        value: [
+          {
+            domain: 'cookie-domain',
+            name: name,
+            value: value
+          }
+        ]
+      });
+
+    return this;
+  },
+
+
 
   cleanAll() {
     nock.cleanAll();

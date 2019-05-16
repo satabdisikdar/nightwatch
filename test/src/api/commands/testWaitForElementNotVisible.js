@@ -11,7 +11,6 @@ describe('waitForElementNotVisible', function() {
     CommandGlobals.beforeEach.call(this, done);
   });
 
-
   afterEach(function() {
     MockServer.removeMock({
       url : '/wd/hub/session/1352110219202/element/0/displayed',
@@ -43,9 +42,9 @@ describe('waitForElementNotVisible', function() {
 
 
     this.client.api.globals.abortOnAssertionFailure = false;
-    this.client.api.waitForElementNotVisible('#weblogin', 110, 50, function callback(result, instance) {
-      assert.equal(assertion[0], true);
-      assert.equal(assertion[4], false);
+    this.client.api.waitForElementNotVisible('#weblogin', 11, 5, function callback(result, instance) {
+      assert.strictEqual(assertion[0], true);
+      assert.strictEqual(assertion[4], false);
       NightwatchAssertion.create = createOrig;
     });
 
@@ -53,13 +52,6 @@ describe('waitForElementNotVisible', function() {
   });
 
   it('client.waitForElementNotVisible() failure', function(done) {
-    const assertion = [];
-    NightwatchAssertion.create = function(...args) {
-      assertion.unshift(...args);
-
-      return createOrig(...args);
-    };
-
     MockServer.addMock({
       url : '/wd/hub/session/1352110219202/element/0/displayed',
       method:'GET',
@@ -70,15 +62,73 @@ describe('waitForElementNotVisible', function() {
       })
     });
 
+    const assertion = [];
+    NightwatchAssertion.create = function(...args) {
+      assertion.unshift(...args);
+
+      return createOrig(...args);
+    };
+
     this.client.api.globals.abortOnAssertionFailure = true;
 
     this.client.api.waitForElementNotVisible('#weblogin', 15, 10, function callback(result) {
-      assert.equal(assertion[0], false);
-      assert.equal(assertion[1].actual, 'visible');
-      assert.equal(assertion[1].expected, 'not visible');
-      assert.equal(assertion[3], 'Timed out while waiting for element <#weblogin> to not be visible for 15 milliseconds.');
-      assert.equal(assertion[4], true); // abortOnFailure
-      assert.equal(result.status, 0);
+      assert.strictEqual(result.status, 0);
+      assert.strictEqual(assertion[0], false);
+      assert.strictEqual(assertion[1].actual, 'visible');
+      assert.strictEqual(assertion[1].expected, 'not visible');
+      assert.strictEqual(assertion[3], 'Timed out while waiting for element <#weblogin> to not be visible for 15 milliseconds.');
+      assert.strictEqual(assertion[4], true); // abortOnFailure
+    });
+
+    this.client.start(function(err) {
+      assert.ok(err instanceof Error);
+      assert.strictEqual(err.abortOnFailure, true);
+      if (err.name !== 'NightwatchAssertError') {
+        throw err;
+      }
+
+      done();
+    }).catch(err => done(err));
+  });
+
+  it('client.waitForElementNotVisible() success after retry', function (done) {
+    const assertion = [];
+
+    NightwatchAssertion.create = function(...args) {
+      assertion.unshift(...args);
+
+      return {
+        run: function() {
+          return Promise.resolve();
+        }
+      };
+    };
+
+    MockServer.addMock({
+      url: '/wd/hub/session/1352110219202/element/0/displayed',
+      method: 'GET',
+      response: JSON.stringify({
+        sessionId: '1352110219202',
+        status: 0,
+        value: true
+      })
+    }, true);
+
+    MockServer.addMock({
+      url: '/wd/hub/session/1352110219202/element/0/displayed',
+      method: 'GET',
+      response: JSON.stringify({
+        sessionId: '1352110219202',
+        status: 0,
+        value: false
+      })
+    }, true);
+
+    this.client.api.globals.abortOnAssertionFailure = false;
+    this.client.api.globals.waitForConditionPollInterval = 50;
+    this.client.api.waitForElementNotVisible('#weblogin', 150, function (result, instance) {
+      assert.strictEqual(assertion[0], true);
+      NightwatchAssertion.create = createOrig;
     });
 
     this.client.start(done);

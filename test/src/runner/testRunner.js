@@ -10,16 +10,29 @@ const Settings = common.require('settings/settings.js');
 const NightwatchClient = common.require('index.js');
 
 describe('testRunner', function() {
+  const emptyPath = path.join(__dirname, '../../sampletests/empty/testdir');
+
   before(function(done) {
     this.server = MockServer.init();
-
     this.server.on('listening', () => {
-      done();
+      fs.mkdir(emptyPath, function(err) {
+        if (err) {
+          return done();
+        }
+        done();
+      });
     });
   });
 
   after(function(done) {
-    CommandGlobals.afterEach.call(this, done);
+    CommandGlobals.afterEach.call(this, function() {
+      fs.rmdir(emptyPath, function(err) {
+        if (err) {
+          return done();
+        }
+        done();
+      });
+    });
   });
 
   beforeEach(function() {
@@ -29,7 +42,22 @@ describe('testRunner', function() {
   });
 
   it('testRunEmptyFolder', function(done) {
-    let testsPath = path.join(__dirname, '../../sampletests/empty');
+    Globals
+      .startTestRunner(emptyPath, {
+        output_folder: false
+      })
+      .catch(err => {
+        assert.ok(err instanceof Error);
+        if (err.message !== `No tests defined! using source folder: ${emptyPath}`) {
+          done(err);
+        } else {
+          done();
+        }
+      });
+  });
+
+  it('testRunEmptySubFolder', function(done) {
+    let testsPath = path.dirname(emptyPath);
 
     Globals
       .startTestRunner(testsPath, {
@@ -79,6 +107,57 @@ describe('testRunner', function() {
       globals: globals,
       output_folder: false
     });
+  });
+
+  it('testRunWithJUnitOutputAndFailures', function () {
+
+    let testsPath = [
+      path.join(__dirname, '../../sampletests/withfailures')
+    ];
+
+    let settings = {
+      selenium: {
+        port: 10195,
+        version2: true,
+        start_process: true
+      },
+      output_folder: 'output',
+      silent: false,
+      globals: {
+        waitForConditionPollInterval: 20,
+        waitForConditionTimeout: 50,
+        retryAssertionTimeout: 50,
+        reporter: function () {
+        }
+      },
+      output: true,
+      screenshots: {
+        enabled: true,
+        on_failure: true,
+        on_error: true,
+        path: ''
+      }
+    };
+
+    MockServer.addMock({
+      url : '/wd/hub/session/1352110219202/screenshot',
+      method:'GET',
+      response : JSON.stringify({
+        sessionId: '1352110219202',
+        status:0,
+        value:'screendata'
+      })
+    });
+
+
+    return NightwatchClient.runTests(testsPath, settings)
+      .then(_ => {
+        return readFilePromise('output/FIREFOX_TEST_TEST_sample.xml');
+      })
+      .then(data => {
+        let content = data.toString();
+        assert.ok(content.indexOf('<system-out>[[ATTACHMENT|') > 0);
+      });
   });
 
   it('testRunWithJUnitOutput', function() {
