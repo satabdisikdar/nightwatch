@@ -16,6 +16,22 @@ module.exports = {
     return item;
   },
 
+  createSession() {
+    nock('http://localhost:10195')
+      .post('/wd/hub/session')
+      .reply(201, {
+        status: 0,
+        sessionId: '1352110219202',
+        value: {
+          browserName: 'firefox',
+          version: 'TEST',
+          platform: 'TEST'
+        }
+      });
+
+    return this;
+  },
+
   checkIfMocksDone() {
     try {
       this._currentNocks.forEach(nock => nock.done());
@@ -190,9 +206,28 @@ module.exports = {
     return this;
   },
 
+  clearValue(id, persist = false) {
+    const mock = this._addNock(this._requestUri);
+    if (persist) {
+      mock.persist();
+    }
+
+    mock
+      .post(this._protocolUri + 'element/' + (id || 0) + '/clear')
+      .reply(200, {
+        status: 0,
+        state : 'success',
+        value: null
+      });
+
+    return this;
+  },
+
   cleanAll () {
-    this._currentNocks = [];
     nock.cleanAll();
+    this._currentNocks = [];
+
+    return this;
   },
 
   disabled: false,
@@ -203,9 +238,11 @@ module.exports = {
     return this;
   },
 
-  enable() {
-    if (this.disabled) {
-      nock.activate();
+  enable(force = false) {
+    if (this.disabled || force) {
+      try {
+        nock.activate();
+      } catch (err) {}
     }
 
     return this;

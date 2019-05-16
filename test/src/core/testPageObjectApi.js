@@ -7,7 +7,7 @@ describe('test PageObjectApi', function () {
   beforeEach(function (done) {
     Nocks.enable().cleanAll().createSession();
     Nightwatch.init({
-      page_objects_path: path.join(__dirname, '../../extra/pageobjects')
+      page_objects_path: path.join(__dirname, '../../extra/pageobjects/pages')
     }, function () {
       done();
     });
@@ -93,8 +93,8 @@ describe('test PageObjectApi', function () {
 
     assert.ok('click' in page);
     assert.ok('waitForElementPresent' in page);
-    assert.ok(!('end' in page));
-    assert.ok(!('switchWindow' in page));
+    assert.ok('end' in page);
+    assert.ok('switchWindow' in page);
   });
 });
 
